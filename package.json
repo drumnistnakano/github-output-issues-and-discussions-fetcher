@@ -11,7 +11,7 @@
     "cli": "npm run start ./main.ts",
     "prepare": "husky",
     "check:spell": "cspell '**/*.{ts,tsx,yml}' --cache --gitignore",
-    "check": "run-p check:*k",
+    "check": "run-p check:*",
     "fix": "run-p fix:*",
     "fix:code": "biome lint --write --no-errors-on-unmatched ./",
     "fix:format": "biome format --write --no-errors-on-unmatched ./",
@@ -44,7 +44,8 @@
     "lint-staged": "^15.2.7",
     "npm-run-all": "4.1.5",
     "sort-package-json": "2.10.0",
-    "tsx": "4.16.2"
+    "tsx": "4.16.2",
+    "typescript": "5.5.3"
   },
   "engines": {
     "node": "20.15.1",

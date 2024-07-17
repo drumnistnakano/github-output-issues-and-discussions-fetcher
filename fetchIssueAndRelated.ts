@@ -1,6 +1,5 @@
-import { Octokit } from "@octokit/rest";
+import type { Octokit } from "@octokit/rest";
 import * as fs from "fs-extra";
-import * as path from "path";
 import { fetchIssue } from "./fetchIssue";
 
 export const fetchIssueAndRelated = async ({
@@ -29,7 +28,7 @@ export const fetchIssueAndRelated = async ({
       outputDir,
       fetchedIssues,
       fetchedDiscussions,
-      issueNumber
+      issueNumber,
     );
   }
 };

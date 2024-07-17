@@ -49,7 +49,7 @@ async function main() {
       });
       const issueNumbers = issueNumbersInput
         .split(",")
-        .map((num) => parseInt(num.trim()));
+        .map((num) => Number.parseInt(num.trim()));
       await fetchIssueAndRelated({
         repoOwner,
         repoName,

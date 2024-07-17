@@ -1,7 +1,9 @@
-import { Octokit } from "@octokit/rest";
+import type { Octokit } from "@octokit/rest";
 import * as fs from "fs-extra";
-import * as path from "path";
+import * as path from "node:path";
 import { fetchIssue } from "./fetchIssue";
+import { exactRelatedIssueNumbers } from "./util/exactRelatedIssueNumbers";
+import { extractDiscussionNumbers } from "./util/extractDiscussionNumbers";
 
 interface DiscussionResponse {
   repository: {
@@ -28,7 +30,7 @@ export async function fetchDiscussion(
   outputDir: string,
   fetchedIssues: Set<number>,
   fetchedDiscussions: Set<number>,
-  discussionNumber: number
+  discussionNumber: number,
 ) {
   if (fetchedDiscussions.has(discussionNumber)) return;
 
@@ -58,7 +60,7 @@ export async function fetchDiscussion(
   const discussionContent = `# ${discussion.title}\n\n${discussion.body}`;
   await fs.writeFile(
     path.join(outputDir, `discussion_${discussionNumber}.md`),
-    discussionContent
+    discussionContent,
   );
 
   const commentsContent = discussion.comments.nodes
@@ -66,13 +68,13 @@ export async function fetchDiscussion(
     .join("\n\n");
   await fs.writeFile(
     path.join(outputDir, `discussion_${discussionNumber}_comments.md`),
-    commentsContent
+    commentsContent,
   );
 
   fetchedDiscussions.add(discussionNumber);
 
-  const relatedIssues = extractRelatedIssues(discussion.body);
-  const relatedDiscussions = extractRelatedDiscussions(discussion.body);
+  const relatedIssues = exactRelatedIssueNumbers(discussion.body);
+  const relatedDiscussions = extractDiscussionNumbers(discussion.body);
 
   for (const relatedIssue of relatedIssues) {
     await fetchIssue(
@@ -82,7 +84,7 @@ export async function fetchDiscussion(
       outputDir,
       fetchedIssues,
       fetchedDiscussions,
-      relatedIssue
+      relatedIssue,
     );
   }
 
@@ -94,18 +96,7 @@ export async function fetchDiscussion(
       outputDir,
       fetchedIssues,
       fetchedDiscussions,
-      relatedDiscussion
+      relatedDiscussion,
     );
   }
-}
-
-function extractRelatedIssues(body: string | null): number[] {
-  return (body?.match(/#[0-9]+/g) || []).map((str) => parseInt(str.slice(1)));
-}
-
-function extractRelatedDiscussions(body: string | null): number[] {
-  return (
-    body?.match(/https:\/\/github\.com\/[^/]+\/[^/]+\/discussions\/[0-9]+/g) ||
-    []
-  ).map((url) => parseInt(url.split("/").pop()!));
 }

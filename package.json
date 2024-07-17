@@ -17,14 +17,11 @@
     "fix:format": "biome format --write --no-errors-on-unmatched ./",
     "check:code": "biome lint ./",
     "check:style": "biome format ./",
-    "check:tsc": "tsc --noEmit",
     "sort": "sort-package-json"
   },
   "lint-staged": {
-    "**/package.json": [
-      "bash -c 'npm run sort'"
-    ],
-    "photo-album/**/*": [
+    "package.json": [
+      "bash -c 'npm run sort'",
       "bash -c 'npm run check'",
       "bash -c 'npm run fix'",
       "bash -c 'npm run check:spell'"

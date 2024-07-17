@@ -1,7 +1,9 @@
-import { Octokit } from "@octokit/rest";
+import type { Octokit } from "@octokit/rest";
 import * as fs from "fs-extra";
-import * as path from "path";
+import * as path from "node:path";
 import { fetchDiscussion } from "./fetchDiscussion";
+import { exactRelatedIssueNumbers } from "./util/exactRelatedIssueNumbers";
+import { extractDiscussionNumbers } from "./util/extractDiscussionNumbers";
 
 export async function fetchIssue(
   octokit: Octokit,
@@ -10,7 +12,7 @@ export async function fetchIssue(
   outputDir: string,
   fetchedIssues: Set<number>,
   fetchedDiscussions: Set<number>,
-  issueNumber: number
+  issueNumber: number,
 ) {
   if (fetchedIssues.has(issueNumber)) return;
 
@@ -29,20 +31,20 @@ export async function fetchIssue(
 
     const commentsContent = comments
       .map(
-        (comment) => `### Comment by ${comment.user?.login}\n\n${comment.body}`
+        (comment) => `### Comment by ${comment.user?.login}\n\n${comment.body}`,
       )
       .join("\n\n");
 
     const issueContent = `# ${issue.title}\n\n${issue.body}\n\n${commentsContent}`;
     await fs.writeFile(
       path.join(outputDir, `issue_${issueNumber}.md`),
-      issueContent
+      issueContent,
     );
 
     fetchedIssues.add(issueNumber);
 
-    const relatedIssues = extractRelatedIssues(issue.body ?? null);
-    const relatedDiscussions = extractRelatedDiscussions(issue.body ?? null);
+    const relatedIssues = exactRelatedIssueNumbers(issue.body ?? null);
+    const relatedDiscussions = extractDiscussionNumbers(issue.body ?? null);
 
     for (const relatedIssue of relatedIssues) {
       await fetchIssue(
@@ -52,7 +54,7 @@ export async function fetchIssue(
         outputDir,
         fetchedIssues,
         fetchedDiscussions,
-        relatedIssue
+        relatedIssue,
       );
     }
 
@@ -64,7 +66,7 @@ export async function fetchIssue(
         outputDir,
         fetchedIssues,
         fetchedDiscussions,
-        relatedDiscussion
+        relatedDiscussion,
       );
     }
   } catch (error) {
@@ -74,15 +76,4 @@ export async function fetchIssue(
       throw error;
     }
   }
-}
-
-function extractRelatedIssues(body: string | null): number[] {
-  return (body?.match(/#[0-9]+/g) || []).map((str) => parseInt(str.slice(1)));
-}
-
-function extractRelatedDiscussions(body: string | null): number[] {
-  return (
-    body?.match(/https:\/\/github\.com\/[^/]+\/[^/]+\/discussions\/[0-9]+/g) ||
-    []
-  ).map((url) => parseInt(url.split("/").pop()!));
 }
